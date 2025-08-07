@@ -1,26 +1,30 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
+require('dotenv').config({path: '.env'});
 const mongoose = require('mongoose');
 const path = require('path');
+const req = require('express/lib/request');
 
 const app = express();
 app.use(cors());
+const PORT = process.env.PORT || 5000;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.get('/',(req,res)=>{
+  res.status(200).json({"running":"perfectly API"});
 
+});
 // Serve uploaded images statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
+console.log('MONGO_URI:', process.env.MONGO_URI);
 // MongoDB connection
-mongoose.connect('mongodb://localhost:27017/lostandfound', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected'))
-.catch((err) => console.error('MongoDB connection error:', err));
-
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB Atlas connected'))
+  .catch(err => console.error('Connection error:', err));
 // Define MongoDB schema and model
+
+
 const postSchema = new mongoose.Schema({
   name: String,
   email: String,
@@ -58,9 +62,8 @@ console.log('FILE:', req.file);
 
     // Note: when using 'multipart/form-data', req.body is populated by multer automatically
     const { name, email, postTitle, postdescription, phone } = req.body;
+const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
 
-
-    const imageUrl = `http://localhost:5000/uploads/${file.filename}`;
 
     const newPost = new Post({
       name,
@@ -139,5 +142,5 @@ app.get('/posts', async (req, res) => {
 });
 
 app.listen(5000, () => {
-  console.log('Server running at http://localhost:5000');
+  console.log(`🚀 Server running on port ${PORT}`);
 });
